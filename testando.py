@@ -21,3 +21,7 @@ print("Ciphertext:", ciphertext)
 decipher = AES.new(key, AES.MODE_ECB)
 decrypted_plaintext = decipher.decrypt(ciphertext).rstrip()
 print("Decrypted plaintext:", decrypted_plaintext.decode('utf-8'))
+
+ciphertext_bytes = bytes.fromhex("e89639fe5021b0190e3775e77b6a2f7a5be3dea2483ff60c69877b235ac82b78")
+
+print(ciphertext_bytes)
