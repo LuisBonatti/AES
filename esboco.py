@@ -1,6 +1,6 @@
 import constants
 from utils import key_matrix, RotWord, SubWord, addRoundKey, SubBytes, ShiftRow, sub_tabela_e, sub_tabela_l, sub_mix, \
-    MixColumns
+    MixColumns, addRoundKey1
 
 chave = "ABCDEFGHIJKLMNOP"
 # texto_simples = [[0x44, 0x45, 0x53, 0x45],
@@ -40,14 +40,15 @@ def expansao_de_chave(matriz_da_chave):
 
 
 expansao_de_chave(matriz_da_chave=keyMatrix)
+round = addRoundKey(texto_simples, matrizes[0])
 
-for i in range(8):
-    round = addRoundKey(texto_simples, matrizes[i])
+for i in range(1, 10):
     sub = SubBytes(round)
     shift = ShiftRow(sub)
-    matrizes[i + 1] = MixColumns(shift)
+    mix = MixColumns(shift)
+    round = addRoundKey1(matrizes[i], mix)
 
-round = addRoundKey(texto_simples, matrizes[9])
 sub = SubBytes(round)
 shift = ShiftRow(sub)
+round = addRoundKey(shift, matrizes[9])
 print(shift)

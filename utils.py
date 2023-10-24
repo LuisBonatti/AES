@@ -26,12 +26,30 @@ def RotWord(key_matrix):
     return last
 
 
+def addRoundKey1(texto_simples, roundkey):
+    l = []
+    for idx, item in enumerate(roundkey):
+        p = []
+        for i, e in enumerate(item):
+            try:
+                x = hex(texto_simples[idx][i])
+            except TypeError:
+                x = hex(int(texto_simples[idx][i], 16))
+            y = int(e, 16)
+            p.append(hex(int(x, 16) ^ y))
+        l.append(p)
+    return l
+
+
 def addRoundKey(texto_simples, roundkey):
     l = []
     for idx, item in enumerate(roundkey):
         p = []
         for i, e in enumerate(item):
-            x = hex(texto_simples[i][idx])
+            try:
+                x = hex(texto_simples[i][idx])
+            except TypeError:
+                x = hex(int(texto_simples[i][idx], 16))
             y = int(e, 16)
             p.append(hex(int(x, 16) ^ y))
         l.append(p)
@@ -141,13 +159,13 @@ def sub_mix(word, w_num):
     for i, e in enumerate(word):
         aux = constants.multi_matrix[w_num][i]
         d = None
-        if e == 0:
+        if int(e, 16) == 0:
             d = 0
-        if e == 1:
+        if int(e, 16) == 1:
             d = aux
         if aux == 1:
             d = e
-        if not d:
+        if d is None:
             x = sub_tabela_l((word[i]))
             aux = constants.multi_matrix[w_num][i]
             y = sub_tabela_l(hex(aux))
@@ -155,8 +173,12 @@ def sub_mix(word, w_num):
             if int(m, 16) > int('0xFF', 16):
                 m = hex(int(m, 16) - int('0xFF', 16))
             d = sub_tabela_e(m)
-        k = hex(int(k, 16) ^ int(d, 16))
+        try:
+            k = hex(int(k, 16) ^ int(d, 16))
+        except TypeError:
+            k = hex(int(k, 16) ^ d)
     return k
+
 
 # TODO verificar mix colums, o restante foi validado.
 def MixColumns(shift):
