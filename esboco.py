@@ -38,8 +38,9 @@ def expansao_de_chave(matriz_da_chave):
         matrizes[j] = matriz_da_chave
         matriz_da_chave = new_matrix
 
-
 expansao_de_chave(matriz_da_chave=keyMatrix)
+
+
 
 for i in range(8):
     round = addRoundKey(texto_simples, matrizes[i])
