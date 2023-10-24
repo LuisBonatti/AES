@@ -18,7 +18,8 @@ matrizes = {}
 
 
 def expansao_de_chave(matriz_da_chave):
-    for j in range(10):
+    matrizes[0] = matriz_da_chave
+    for j in range(1, 11):
         last_word_line = RotWord(matriz_da_chave)
         new_words = SubWord(last_word_line)
         rcon = constants.roundConstant[j]
@@ -35,8 +36,8 @@ def expansao_de_chave(matriz_da_chave):
                     p.append(hex(int(last_word[i], 16) ^ int(e, 16)))
             new_matrix.append(p)
             last_word = p
-        matrizes[j] = matriz_da_chave
         matriz_da_chave = new_matrix
+        matrizes[j] = matriz_da_chave
 
 
 expansao_de_chave(matriz_da_chave=keyMatrix)
@@ -50,5 +51,5 @@ for i in range(1, 10):
 
 sub = SubBytes(round)
 shift = ShiftRow(sub)
-round = addRoundKey(shift, matrizes[9])
-print(shift)
+round = addRoundKey1(shift, matrizes[10])
+print(round)
