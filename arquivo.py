@@ -25,3 +25,4 @@ for i in range(0, len(input_list), 4):
 
 # Transpose the matrix
 transposed_matrix = [[matrix[j][i] for j in range(4)] for i in range(4)]
+print(transposed_matrix)

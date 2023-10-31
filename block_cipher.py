@@ -1,17 +1,54 @@
 import constants
+from utilities.file import pkcs7_padding, format_data, get_file
 
 
 class Cipher:
-    def __init__(self, texto_simples, key):
-        self.texto_simples = texto_simples
+    def __init__(self, key, file_path=None, simple_text=None):
+        if (simple_text, file_path) is None:
+            raise Exception("Simple text or file_path is required!")
+        self.simple_text = simple_text
+        self.file_path = file_path
         self.key = key
         self.matrizes = {}
         self.keyMatrix = self.key_matrix(self.key)
 
+    def encrypt_block(self, data):
+        self.expansao_de_chave(self.keyMatrix)
+        round = self.add_round_key(data, self.matrizes[0])
+        for i in range(1, 10):
+            sub = self.sub_bytes(round)
+            shift = self.shift_row(sub)
+            mix = self.mix_columns(shift)
+            round = self.add_round_key(self.matrizes[i], mix)
+
+        sub = self.sub_bytes(round)
+        shift = self.shift_row(sub)
+        round = self.add_round_key(shift, self.matrizes[10])
+        self.matrizes = {}
+        return round
+
+    def to_hex_string(self, hex_list):
+        return ''.join([hex_value[2:].zfill(2) for row in hex_list for hex_value in row])
+
+    def encrypt(self):
+        if self.file_path:
+            data = get_file(self.file_path)
+        else:
+            data = self.simple_text
+        text_padded = pkcs7_padding(data)
+        self.simple_text = format_data(text_padded)
+        blocks_qtd = int(len(self.simple_text) / 4)
+        final_result = ''
+        for b in range(blocks_qtd):
+            block_grid = self.get_block()
+            encrypted_block = self.encrypt_block(block_grid)
+            final_result += self.to_hex_string(encrypted_block)
+        return final_result
+
     def get_block(self):
-        bloco = self.texto_simples[:4]
-        self.texto_simples.pop(0), self.texto_simples.pop(1), self.texto_simples.pop(2), self.texto_simples.pop(3)
-        return bloco
+        block = self.simple_text[:4]
+        self.simple_text.pop(0), self.simple_text.pop(0), self.simple_text.pop(0), self.simple_text.pop(0)
+        return block
 
     def sub_bytes(self, round):
         k = []
@@ -226,17 +263,3 @@ class Cipher:
                 if j == 3:
                     new_matriz[i][j] = tr[i]
         return new_matriz
-
-    def encrypt(self):
-        self.expansao_de_chave(self.keyMatrix)
-        round = self.add_round_key(self.texto_simples, self.matrizes[0])
-        for i in range(1, 10):
-            sub = self.sub_bytes(round)
-            shift = self.shift_row(sub)
-            mix = self.mix_columns(shift)
-            round = self.add_round_key(self.matrizes[i], mix)
-
-        sub = self.sub_bytes(round)
-        shift = self.shift_row(sub)
-        round = self.add_round_key(shift, self.matrizes[10])
-        return round
