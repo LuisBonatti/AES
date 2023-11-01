@@ -1,30 +1,31 @@
 import constants
-from utilities.file import pkcs7_padding, format_data, get_file
+from utilities.file import pkcs7_padding, format_data, get_file, create_file
 
 
 class Cipher:
-    def __init__(self, key, file_path=None, simple_text=None):
+    def __init__(self, key, file_path=None, simple_text=None, dest_file=None):
         if (simple_text, file_path) is None:
             raise Exception("Simple text or file_path is required!")
         self.simple_text = simple_text
         self.file_path = file_path
+        self.dest_file = dest_file
         self.key = key
-        self.matrizes = {}
+        self.matrix = {}
         self.keyMatrix = self.key_matrix(self.key)
 
     def encrypt_block(self, data):
-        self.expansao_de_chave(self.keyMatrix)
-        round = self.add_round_key(data, self.matrizes[0])
+        self.key_expansion(self.keyMatrix)
+        round = self.add_round_key(data, self.matrix[0])
         for i in range(1, 10):
             sub = self.sub_bytes(round)
             shift = self.shift_row(sub)
             mix = self.mix_columns(shift)
-            round = self.add_round_key(self.matrizes[i], mix)
+            round = self.add_round_key(self.matrix[i], mix)
 
         sub = self.sub_bytes(round)
         shift = self.shift_row(sub)
-        round = self.add_round_key(shift, self.matrizes[10])
-        self.matrizes = {}
+        round = self.add_round_key(shift, self.matrix[10])
+        self.matrix = {}
         return round
 
     def to_hex_string(self, hex_list):
@@ -43,6 +44,8 @@ class Cipher:
             block_grid = self.get_block()
             encrypted_block = self.encrypt_block(block_grid)
             final_result += self.to_hex_string(encrypted_block)
+        if self.dest_file:
+            create_file(final_result, self.dest_file)
         return final_result
 
     def get_block(self):
@@ -70,15 +73,15 @@ class Cipher:
             l.append(p)
         return l
 
-    def add_round_key(self, texto_simples, roundkey):
+    def add_round_key(self, text, roundkey):
         l = []
         for idx, item in enumerate(roundkey):
             p = []
             for i, e in enumerate(item):
                 try:
-                    x = hex(texto_simples[idx][i])
+                    x = hex(text[idx][i])
                 except TypeError:
-                    x = hex(int(texto_simples[idx][i], 16))
+                    x = hex(int(text[idx][i], 16))
                 y = int(e, 16)
                 p.append(hex(int(x, 16) ^ y))
             l.append(p)
@@ -136,17 +139,17 @@ class Cipher:
                 count += 1
         return board
 
-    def expansao_de_chave(self, matriz_da_chave):
-        self.matrizes[0] = matriz_da_chave
+    def key_expansion(self, key_matrix):
+        self.matrix[0] = key_matrix
         for j in range(1, 11):
-            last_word_line = self.rot_word(matriz_da_chave)
+            last_word_line = self.rot_word(key_matrix)
             new_words = self.sub_word(last_word_line)
             rcon = constants.roundConstant[j]
             hex(rcon)
             new_words[0] = hex(rcon ^ int(new_words[0], 16))
             new_matrix = []
             last_word = []
-            for idx, item in enumerate(matriz_da_chave):
+            for idx, item in enumerate(key_matrix):
                 p = []
                 for i, e in enumerate(item):
                     if len(new_matrix) == 0:
@@ -155,10 +158,10 @@ class Cipher:
                         p.append(hex(int(last_word[i], 16) ^ int(e, 16)))
                 new_matrix.append(p)
                 last_word = p
-            matriz_da_chave = new_matrix
-            self.matrizes[j] = matriz_da_chave
+            key_matrix = new_matrix
+            self.matrix[j] = key_matrix
 
-    def sub_tabela_e(self, word):
+    def sub_tabel_e(self, word):
         try:
             left, right = word.split('0x')[1]
             if len(right) > 2:
@@ -171,28 +174,28 @@ class Cipher:
                 right = right[-1]
                 left = right[:2]
         if left.isnumeric() and right.isnumeric():
-            return hex(constants.tabela_e[int(left)][int(right)])
+            return hex(constants.tabel_e[int(left)][int(right)])
         elif left.isnumeric() and (right.isnumeric() == False):
-            return hex(constants.tabela_e[int(left)][constants.idx[right]])
+            return hex(constants.tabel_e[int(left)][constants.idx[right]])
         elif right.isnumeric() and (left.isnumeric() == False):
-            return hex(constants.tabela_e[constants.idx[left]][int(right)])
+            return hex(constants.tabel_e[constants.idx[left]][int(right)])
         else:
-            return hex(constants.tabela_e[constants.idx[left]][constants.idx[right]])
+            return hex(constants.tabel_e[constants.idx[left]][constants.idx[right]])
 
-    def sub_tabela_l(self, word):
+    def sub_tabel_l(self, word):
         try:
             left, right = word.split('0x')[1]
         except ValueError:
             left = '0'
             right = word.split('0x')[1]
         if left.isnumeric() and right.isnumeric():
-            return hex(constants.tabela_l[int(left)][int(right)])
+            return hex(constants.tabel_l[int(left)][int(right)])
         elif left.isnumeric() and (right.isnumeric() == False):
-            return hex(constants.tabela_l[int(left)][constants.idx[right]])
+            return hex(constants.tabel_l[int(left)][constants.idx[right]])
         elif right.isnumeric() and (left.isnumeric() == False):
-            return hex(constants.tabela_l[constants.idx[left]][int(right)])
+            return hex(constants.tabel_l[constants.idx[left]][int(right)])
         else:
-            return hex(constants.tabela_l[constants.idx[left]][constants.idx[right]])
+            return hex(constants.tabel_l[constants.idx[left]][constants.idx[right]])
 
     def sub_mix(self, word, w_num):
         k = '0x00'
@@ -206,13 +209,13 @@ class Cipher:
             if aux == 1:
                 d = e
             if d is None:
-                x = self.sub_tabela_l((word[i]))
+                x = self.sub_tabel_l((word[i]))
                 aux = constants.multi_matrix[w_num][i]
-                y = self.sub_tabela_l(hex(aux))
+                y = self.sub_tabel_l(hex(aux))
                 m = hex(int(x, 16) + int(y, 16))
                 if int(m, 16) > int('0xFF', 16):
                     m = hex(int(m, 16) - int('0xFF', 16))
-                d = self.sub_tabela_e(m)
+                d = self.sub_tabel_e(m)
             try:
                 k = hex(int(k, 16) ^ int(d, 16))
             except TypeError:

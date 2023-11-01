@@ -20,12 +20,10 @@ def format_data(data):
     return grid
 
 
-
-# data = get_file("../teste.txt")
-# print(data)
-# x = [[0x44, 0x45, 0x53, 0x45], [0x4e, 0x56, 0x4f, 0x4c], [0x56, 0x49, 0x4d, 0x45], [0x4e, 0x54, 0x4f, 0x21]]
-# padded_data = pkcs7_padding(data)
-# grid = format_data(padded_data)
-# print(grid)
-# hex_list = [[int(hex_str, 16) for hex_str in inner_list] for inner_list in original_list]
-# print(hex_list)
+def create_file(data, filename):
+    try:
+        with open(filename, "w") as file:
+            file.write(data)
+        print(f"File '{filename}' created successfully.")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
