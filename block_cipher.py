@@ -116,8 +116,19 @@ class Cipher:
             ["", "", "", ""],
             ["", "", "", ""],
         ]
-        key = key.encode('utf-8')
-        hex_key = [f"0x{i}" for i in key.hex(":").split(':')]
+        key_list = key.split(",")
+        hexadecimal_key = []
+        add_0x = False
+        for i in key_list:
+            try:
+                hexadecimal_key.append(hex(int(i)))
+            except ValueError:
+                hexadecimal_key.append(i.encode('utf-8').hex())
+                add_0x = True
+        if add_0x:
+            hex_key = [f"0x{i}" for i in hexadecimal_key]
+        else:
+            hex_key = hexadecimal_key
         count = 0
         for i in range(4):
             for j in range(4):
